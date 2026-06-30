@@ -21,19 +21,27 @@ export default function App() {
   const [integrados, setIntegrados] = useState<Integrado[]>([]);
   const [visits, setVisits] = useState<Visit[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const loadData = async () => {
     try {
+      setError(null);
       const [resIntegrados, resVisits] = await Promise.all([
         fetch('/api/integrados'),
         fetch('/api/visits')
       ]);
+      
+      if (!resIntegrados.ok || !resVisits.ok) {
+        throw new Error('Falha ao carregar dados do servidor.');
+      }
+      
       const dataIntegrados = await resIntegrados.json();
       const dataVisits = await resVisits.json();
       setIntegrados(dataIntegrados);
       setVisits(dataVisits);
     } catch (e) {
       console.error(e);
+      setError('Aviso: Não foi possível conectar ao banco de dados. O GitHub Pages apenas suporta sites estáticos e não executa o servidor backend. Para ter persistência de dados, exporte o código e utilize um serviço como Render, Vercel ou Google Cloud Run.');
     } finally {
       setLoading(false);
     }
@@ -276,6 +284,11 @@ export default function App() {
         </header>
         <div className="flex-1 p-4 md:p-8 overflow-y-auto w-full">
           <div className="max-w-7xl mx-auto w-full">
+            {error && (
+              <div className="mb-6 p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg shadow-sm">
+                <p className="font-medium text-sm">{error}</p>
+              </div>
+            )}
             {renderContent()}
           </div>
         </div>
