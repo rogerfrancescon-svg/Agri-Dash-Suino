@@ -5,9 +5,10 @@ import { Users } from 'lucide-react';
 interface IntegradosProps {
   integrados: Integrado[];
   onUpdate: (integrado: Integrado) => void;
+  onDelete: (id: string) => void;
 }
 
-export function Integrados({ integrados, onUpdate }: IntegradosProps) {
+export function Integrados({ integrados, onUpdate, onDelete }: IntegradosProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editLoteNumber, setEditLoteNumber] = useState('');
@@ -161,6 +162,16 @@ export function Integrados({ integrados, onUpdate }: IntegradosProps) {
                             className="text-blue-500 hover:text-blue-700 text-xs uppercase font-bold tracking-wider"
                           >
                             Editar
+                          </button>
+                          <button 
+                            onClick={() => {
+                              if (window.confirm('Tem certeza que deseja apagar este integrado? Todas as visitas associadas também serão apagadas. Esta ação é irreversível.')) {
+                                onDelete(i.id);
+                              }
+                            }}
+                            className="text-red-500 hover:text-red-700 text-xs uppercase font-bold tracking-wider"
+                          >
+                            Apagar
                           </button>
                         </div>
                       )}

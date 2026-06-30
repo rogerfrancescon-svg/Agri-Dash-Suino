@@ -111,6 +111,21 @@ export function ImportData({ onImportComplete }: ImportDataProps) {
         >
           {loading ? 'Importando...' : 'Iniciar Importação'}
         </button>
+        <button 
+          onClick={() => {
+            if (window.confirm('Tem certeza que deseja apagar TODOS os dados do sistema? Esta ação é irreversível.')) {
+              storage.clearAll();
+              addLog('Todos os dados foram apagados.');
+              setTimeout(() => {
+                onImportComplete();
+              }, 1000);
+            }
+          }}
+          disabled={loading}
+          className="bg-red-600 text-white px-6 py-2 rounded text-sm font-semibold hover:bg-red-700 transition disabled:opacity-50"
+        >
+          Apagar Todos os Dados
+        </button>
       </div>
 
       {logs.length > 0 && (

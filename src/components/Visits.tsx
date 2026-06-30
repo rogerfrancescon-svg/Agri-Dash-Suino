@@ -7,9 +7,10 @@ interface VisitsListProps {
   visits: Visit[];
   integrados: Integrado[];
   onEditVisit: (id: string) => void;
+  onDeleteVisit: (id: string) => void;
 }
 
-export function VisitsList({ visits, integrados, onEditVisit }: VisitsListProps) {
+export function VisitsList({ visits, integrados, onEditVisit, onDeleteVisit }: VisitsListProps) {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Sort by date descending
@@ -100,12 +101,24 @@ export function VisitsList({ visits, integrados, onEditVisit }: VisitsListProps)
                     </td>
                     <td className="px-5 py-4 whitespace-nowrap text-xs">{v.colaborador}</td>
                     <td className="px-5 py-4 whitespace-nowrap">
-                      <button 
-                        onClick={() => onEditVisit(v.id)}
-                        className="text-blue-600 hover:text-blue-800 text-xs font-semibold px-2 py-1 rounded hover:bg-blue-50 transition-colors"
-                      >
-                        Editar
-                      </button>
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => onEditVisit(v.id)}
+                          className="text-blue-600 hover:text-blue-800 text-xs font-semibold px-2 py-1 rounded hover:bg-blue-50 transition-colors"
+                        >
+                          Editar
+                        </button>
+                        <button 
+                          onClick={() => {
+                            if (window.confirm('Tem certeza que deseja apagar esta visita?')) {
+                              onDeleteVisit(v.id);
+                            }
+                          }}
+                          className="text-red-600 hover:text-red-800 text-xs font-semibold px-2 py-1 rounded hover:bg-red-50 transition-colors"
+                        >
+                          Apagar
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

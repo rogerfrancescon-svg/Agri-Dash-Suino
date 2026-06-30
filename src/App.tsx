@@ -88,6 +88,12 @@ export default function App() {
     setIsVisitFormOpen(false);
   };
 
+  const handleDeleteVisit = (id: string) => {
+    const updatedVisits = visits.filter(v => v.id !== id);
+    setVisits(updatedVisits);
+    storage.saveVisits(updatedVisits);
+  };
+
   const handleEditVisitClick = (id: string) => {
     setEditingVisitId(id);
     setIsVisitFormOpen(true);
@@ -187,7 +193,7 @@ export default function App() {
                 />
               </div>
             )}
-            <VisitsList visits={visits} integrados={integrados} onEditVisit={handleEditVisitClick} />
+            <VisitsList visits={visits} integrados={integrados} onEditVisit={handleEditVisitClick} onDeleteVisit={handleDeleteVisit} />
           </div>
         )
       }
@@ -199,6 +205,15 @@ export default function App() {
               const updatedIntegrados = integrados.map(i => i.id === updated.id ? updated : i);
               setIntegrados(updatedIntegrados);
               storage.saveIntegrados(updatedIntegrados);
+            }}
+            onDelete={(id) => {
+              const updatedIntegrados = integrados.filter(i => i.id !== id);
+              setIntegrados(updatedIntegrados);
+              storage.saveIntegrados(updatedIntegrados);
+              
+              const updatedVisits = visits.filter(v => v.integradoId !== id);
+              setVisits(updatedVisits);
+              storage.saveVisits(updatedVisits);
             }}
           />
         );
