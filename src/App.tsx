@@ -41,7 +41,7 @@ export default function App() {
       setVisits(dataVisits);
     } catch (e) {
       console.error(e);
-      setError('Aviso: Não foi possível conectar ao banco de dados. O GitHub Pages apenas suporta sites estáticos e não executa o servidor backend. Para ter persistência de dados, exporte o código e utilize um serviço como Render, Vercel ou Google Cloud Run.');
+      setError('Aviso: Não foi possível conectar ao banco de dados. O GitHub Pages não suporta banco de dados (Cloud SQL) ou servidor backend. Para que o sistema funcione completamente, você deve publicá-lo no Google Cloud Run, Render ou Vercel.');
     } finally {
       setLoading(false);
     }
