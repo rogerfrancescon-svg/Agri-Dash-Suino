@@ -288,6 +288,7 @@ export default function App() {
         return (
           <Integrados 
             integrados={integrados} 
+            visits={visits}
             totalVisits={visits.length}
             onUpdate={async (updated) => {
               const updatedIntegrados = integrados.map(i => i.id === updated.id ? updated : i);

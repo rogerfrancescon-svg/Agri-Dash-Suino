@@ -1,11 +1,11 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { 
   ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   BarChart, Bar, Cell, ReferenceArea, LabelList
 } from 'recharts';
 import { Visit, Integrado } from '../types';
 import { getExpectedConsumption } from '../data';
-import { Filter, Calendar, Download, TrendingUp, TrendingDown, AlertTriangle, ArrowUpDown } from 'lucide-react';
+import { Filter, Calendar, Download, TrendingUp, TrendingDown, AlertTriangle, ArrowUpDown, ChevronDown, Check } from 'lucide-react';
 
 interface DashboardProps {
   visits: Visit[];
@@ -13,7 +13,20 @@ interface DashboardProps {
 }
 
 export function Dashboard({ visits, integrados }: DashboardProps) {
-  const [selectedIntegradoId, setSelectedIntegradoId] = useState<string>('all');
+  const [selectedIntegradoIds, setSelectedIntegradoIds] = useState<string[]>([]);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const [selectedPeriod, setSelectedPeriod] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('name-asc');
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -33,9 +46,9 @@ export function Dashboard({ visits, integrados }: DashboardProps) {
   }, [integrados]);
 
   const filteredIntegrados = useMemo(() => {
-    if (selectedIntegradoId === 'all') return activeIntegrados;
-    return activeIntegrados.filter(i => i.id === selectedIntegradoId);
-  }, [activeIntegrados, selectedIntegradoId]);
+    if (selectedIntegradoIds.length === 0) return activeIntegrados;
+    return activeIntegrados.filter(i => selectedIntegradoIds.includes(i.id));
+  }, [activeIntegrados, selectedIntegradoIds]);
 
   // Filter visits based on selected period
   const filteredVisits = useMemo(() => {
@@ -239,18 +252,56 @@ export function Dashboard({ visits, integrados }: DashboardProps) {
             </select>
           </div>
           
-          <div className="relative w-full md:w-56">
-            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <select
-              value={selectedIntegradoId}
-              onChange={(e) => setSelectedIntegradoId(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none text-slate-700 font-medium shadow-sm"
+          <div className="relative w-full md:w-64" ref={dropdownRef}>
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-700 font-medium shadow-sm flex items-center justify-between"
             >
-              <option value="all">Todos os Clientes (Ativos)</option>
-              {activeIntegrados.map(i => (
-                <option key={i.id} value={i.id}>{i.name}</option>
-              ))}
-            </select>
+              <div className="flex items-center gap-2 overflow-hidden">
+                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <span className="truncate ml-2">
+                  {selectedIntegradoIds.length === 0 
+                    ? 'Todos os Produtores' 
+                    : `${selectedIntegradoIds.length} selecionado(s)`}
+                </span>
+              </div>
+              <ChevronDown className="w-4 h-4 text-slate-400" />
+            </button>
+            
+            {isDropdownOpen && (
+              <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                <div 
+                  className="flex items-center px-3 py-2 hover:bg-slate-50 cursor-pointer border-b border-slate-100"
+                  onClick={() => setSelectedIntegradoIds([])}
+                >
+                  <div className={`w-4 h-4 border rounded mr-2 flex items-center justify-center ${selectedIntegradoIds.length === 0 ? 'bg-blue-500 border-blue-500' : 'border-slate-300'}`}>
+                    {selectedIntegradoIds.length === 0 && <Check className="w-3 h-3 text-white" />}
+                  </div>
+                  <span className="text-sm text-slate-700 font-medium">Todos os Produtores</span>
+                </div>
+                {activeIntegrados.map(i => {
+                  const isSelected = selectedIntegradoIds.includes(i.id);
+                  return (
+                    <div 
+                      key={i.id}
+                      className="flex items-center px-3 py-2 hover:bg-slate-50 cursor-pointer"
+                      onClick={() => {
+                        setSelectedIntegradoIds(prev => 
+                          isSelected 
+                            ? prev.filter(id => id !== i.id)
+                            : [...prev, i.id]
+                        );
+                      }}
+                    >
+                      <div className={`w-4 h-4 border rounded mr-2 flex items-center justify-center shrink-0 ${isSelected ? 'bg-blue-500 border-blue-500' : 'border-slate-300'}`}>
+                        {isSelected && <Check className="w-3 h-3 text-white" />}
+                      </div>
+                      <span className="text-sm text-slate-700 truncate">{i.name}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>
