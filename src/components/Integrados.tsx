@@ -72,10 +72,11 @@ export function Integrados({ integrados, visits, totalVisits, onUpdate, onDelete
                 let mortalidadeBg = 'bg-slate-100';
 
                 if (latestVisit) {
-                  if (latestVisit.consumoAcumuladoReal) {
-                    const expected = getExpectedConsumption(latestVisit.idade);
-                    const diff = latestVisit.consumoAcumuladoReal - expected;
-                    consumoStr = `${latestVisit.consumoAcumuladoReal.toFixed(2)} kg`;
+                  if (latestVisit.consumoAcumuladoReal !== undefined && latestVisit.consumoAcumuladoReal !== null && Number(latestVisit.consumoAcumuladoReal) > 0) {
+                    const expected = getExpectedConsumption(Number(latestVisit.idade));
+                    const realVal = Number(latestVisit.consumoAcumuladoReal);
+                    const diff = realVal - expected;
+                    consumoStr = `${realVal.toFixed(2)} kg`;
                     diferencaStr = diff > 0 ? `(+${diff.toFixed(2)} kg)` : `(${diff.toFixed(2)} kg)`;
                     if (diff >= -5 && diff <= 5) {
                       consumoColor = 'text-emerald-700';
@@ -91,12 +92,13 @@ export function Integrados({ integrados, visits, totalVisits, onUpdate, onDelete
 
                   let mortPerc = 0;
                   let hasMort = false;
-                  if (latestVisit.animaisAlojados && latestVisit.animaisAlojados > 0) {
-                    const mortos = latestVisit.animaisMortos !== undefined ? latestVisit.animaisMortos : (latestVisit.mortalidade || 0);
-                    mortPerc = (mortos / latestVisit.animaisAlojados) * 100;
+                  const alojados = Number(latestVisit.animaisAlojados || 0);
+                  if (alojados > 0) {
+                    const mortos = latestVisit.animaisMortos !== undefined ? Number(latestVisit.animaisMortos) : Number(latestVisit.mortalidade || 0);
+                    mortPerc = (mortos / alojados) * 100;
                     hasMort = true;
-                  } else if (latestVisit.mortalidade !== undefined) {
-                    mortPerc = latestVisit.mortalidade;
+                  } else if (latestVisit.mortalidade !== undefined && latestVisit.mortalidade !== null) {
+                    mortPerc = Number(latestVisit.mortalidade);
                     hasMort = true;
                   }
 

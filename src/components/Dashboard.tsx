@@ -154,9 +154,9 @@ export function Dashboard({ visits, integrados }: DashboardProps) {
         fullName: integrado?.name || 'Desconhecido',
         date: v.date,
         idade: v.idade,
-        consumoReal: v.consumoAcumuladoReal,
+        consumoReal: Number(v.consumoAcumuladoReal),
         consumoEsperado: expected,
-        diferenca: Number((v.consumoAcumuladoReal - expected).toFixed(2)),
+        diferenca: Number((Number(v.consumoAcumuladoReal) - expected).toFixed(2)),
         mortalidade: v.mortalidade,
         animaisMortos: v.animaisMortos,
         animaisAlojados: v.animaisAlojados,
@@ -191,14 +191,14 @@ export function Dashboard({ visits, integrados }: DashboardProps) {
       let countPercentages = 0;
 
       latestVisitsData.forEach(d => {
-        const mortos = d.animaisMortos !== undefined ? d.animaisMortos : (d.mortalidade || 0);
-        const alojados = d.animaisAlojados || 0;
+        const mortos = d.animaisMortos !== undefined && d.animaisMortos !== null ? Number(d.animaisMortos) : Number(d.mortalidade || 0);
+        const alojados = Number(d.animaisAlojados || 0);
         
         if (alojados > 0) {
           totalMortos += mortos;
           totalAlojados += alojados;
-        } else if (d.mortalidade !== undefined) {
-          sumPercentages += d.mortalidade;
+        } else if (d.mortalidade !== undefined && d.mortalidade !== null) {
+          sumPercentages += Number(d.mortalidade);
           countPercentages++;
         }
       });
@@ -374,11 +374,11 @@ export function Dashboard({ visits, integrados }: DashboardProps) {
               <Tooltip 
                 contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                 labelFormatter={(label) => `Idade: ${label} dias`} 
-                formatter={(value: number | [number, number], name: string) => {
+                formatter={(value: any, name: any) => {
                   if (Array.isArray(value)) {
-                    return [`${value[0].toFixed(2)} - ${value[1].toFixed(2)} kg`, name];
+                    return [`${Number(value[0]).toFixed(2)} - ${Number(value[1]).toFixed(2)} kg`, name];
                   }
-                  return [`${value.toFixed(2)} kg`, name];
+                  return [`${Number(value).toFixed(2)} kg`, name];
                 }}
               />
               {filteredIntegrados.length <= 4 && (
@@ -386,7 +386,7 @@ export function Dashboard({ visits, integrados }: DashboardProps) {
                   verticalAlign="top" 
                   height={36} 
                   iconType="circle" 
-                  payload={[
+                  payload={ (
                     { value: 'Curva Alvo', type: 'circle', id: 'consumoEsperado', color: '#94a3b8' },
                     ...Array.from(new Map(filteredIntegrados.map((integrado, index) => {
                       const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f43f5e'];
@@ -452,7 +452,7 @@ export function Dashboard({ visits, integrados }: DashboardProps) {
                 <Tooltip 
                   cursor={{ fill: 'rgba(241, 245, 249, 0.5)' }} 
                   contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  formatter={(value: number) => [`${value > 0 ? '+' : ''}${value.toFixed(2)} kg`, 'Diferença']}
+                  formatter={(value: any) => [`${value > 0 ? '+' : ''}${Number(value).toFixed(2)} kg`, 'Diferença']}
                 />
                 <Bar dataKey="diferenca" name="Diferença vs Alvo" radius={[4, 4, 0, 0]}>
                   {
@@ -466,7 +466,7 @@ export function Dashboard({ visits, integrados }: DashboardProps) {
                     fill="#64748b" 
                     fontSize={10} 
                     fontWeight={500}
-                    formatter={(val: number) => val > 0 ? `+${val.toFixed(1)}` : val.toFixed(1)}
+                    formatter={(val: number) => val > 0 ? `+${Number(val).toFixed(1)}` : Number(val).toFixed(1)}
                   />
                 </Bar>
               </BarChart>
