@@ -2,8 +2,8 @@ import { Integrado, Visit } from '../types';
 import { supabase } from './supabase';
 import { defaultMetas } from '../data';
 
-const INTEGRADOS_KEY = 'agridash_integrados';
-const VISITS_KEY = 'agridash_visits';
+const INTEGRADOS_KEY = 'suino_dashpro_integrados';
+const VISITS_KEY = 'suino_dashpro_visits';
 
 const getIntegradosLocal = (): Integrado[] => {
   try {
