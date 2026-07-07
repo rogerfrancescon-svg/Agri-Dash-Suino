@@ -1,0 +1,2 @@
+Data;Nome Integrado;Lote;Idade;Animais Alojados;Recomendao;Mortalidade;Comedouro;Peso Aloj;Pontuao Sanitria;Colaborador;Consumo
+01/01/2023;Teste8;1;10;1000;Rao X;0;Auto;30.5;Excelente;Joo;100

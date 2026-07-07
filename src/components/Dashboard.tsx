@@ -5,7 +5,8 @@ import {
 } from 'recharts';
 import { Visit, Integrado } from '../types';
 import { getExpectedConsumption } from '../data';
-import { Filter, Calendar, Download, TrendingUp, TrendingDown, AlertTriangle, ArrowUpDown, ChevronDown, Check } from 'lucide-react';
+import html2pdf from 'html2pdf.js';
+import { FileDown, Filter, Calendar, Download, TrendingUp, TrendingDown, AlertTriangle, ArrowUpDown, ChevronDown, Check } from 'lucide-react';
 
 interface DashboardProps {
   visits: Visit[];
@@ -16,6 +17,7 @@ export function Dashboard({ visits, integrados }: DashboardProps) {
   const [selectedIntegradoIds, setSelectedIntegradoIds] = useState<string[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const dashboardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -217,12 +219,37 @@ export function Dashboard({ visits, integrados }: DashboardProps) {
     return { totalIntegrados, alertCount, avgMortalidade, avgDiferenca };
   }, [latestVisitsData, filteredIntegrados.length, filteredVisits]);
 
+  const handleExportPDF = () => {
+    if (!dashboardRef.current) return;
+    
+    // Create a wrapper for printing to ensure good formatting
+    const opt: any = {
+      margin: 10,
+      filename: selectedIntegradoIds.length === 1 ? `relatorio_${filteredIntegrados[0]?.name || 'lote'}.pdf` : 'relatorio_dashboard.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+    };
+    html2pdf().set(opt).from(dashboardRef.current).save();
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" ref={dashboardRef}>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-2xl font-bold text-slate-800">Dashboard de Consumo</h1>
         <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+          
+          {selectedIntegradoIds.length === 1 && (
+            <button
+              onClick={handleExportPDF}
+              className="flex items-center justify-center gap-2 text-sm text-white bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg shadow-sm w-full md:w-auto font-medium transition-colors"
+            >
+              <FileDown className="w-4 h-4" />
+              Gerar PDF
+            </button>
+          )}
           <div className="flex items-center gap-2 text-sm text-slate-500 bg-white border border-slate-200 px-3 py-2 rounded-lg shadow-sm w-full md:w-auto">
+
             <ArrowUpDown className="w-4 h-4" />
             <select 
               value={sortBy}

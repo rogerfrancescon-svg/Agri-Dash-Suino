@@ -8,11 +8,13 @@ import { IntegradoForm } from './components/IntegradoForm';
 import { ReferenceCurve } from './components/ReferenceCurve';
 import { ImportData } from './components/ImportData';
 import { Login } from './components/Login';
+import { Notifications } from './components/Notifications';
 import { Visit, Integrado } from './types';
 import { Menu, X, LogOut, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { storage } from './lib/storage';
 import { supabase } from './lib/supabase';
+import { saveBackupToIndexedDB } from './lib/backup';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState('dashboard');
@@ -155,6 +157,9 @@ export default function App() {
     setVisits(updatedVisits);
     const savedVisits = await storage.saveVisits(updatedVisits, [newVisit]);
     setVisits([...savedVisits]);
+    
+    // Create local backup to IndexedDB
+    await saveBackupToIndexedDB();
   };
 
   const handleUpdateVisit = async (updatedVisit: Visit, integradoNome?: string, alojamentoDate?: string) => {
@@ -165,6 +170,9 @@ export default function App() {
     setVisits(updatedVisits);
     const savedVisits = await storage.saveVisits(updatedVisits, [updatedVisit]);
     setVisits([...savedVisits]);
+    
+    // Create local backup to IndexedDB
+    await saveBackupToIndexedDB();
   };
 
   const handleDeleteVisit = async (id: string) => {
@@ -245,39 +253,38 @@ export default function App() {
   };
 
   const renderContent = () => {
-    switch (currentTab) {
-      case 'dashboard':
-        return <Dashboard visits={visits} integrados={integrados} />;
-      case 'visitas': {
-        if (isVisitFormOpen) {
-          const visitToEdit = editingVisitId ? visits.find(v => v.id === editingVisitId) : undefined;
-          return (
+    return (
+      <>
+        <div style={{ display: currentTab === 'dashboard' ? 'block' : 'none' }}>
+          <Dashboard visits={visits} integrados={integrados} />
+        </div>
+        
+        {currentTab === 'visitas' && (
+          isVisitFormOpen ? (
             <div className="space-y-6">
               <VisitaForm 
                 integrados={integrados} 
                 visits={visits}
-                initialData={visitToEdit}
+                initialData={editingVisitId ? visits.find(v => v.id === editingVisitId) : undefined}
                 onSave={editingVisitId ? handleUpdateVisit : handleAddVisit} 
                 onCancel={() => { setIsVisitFormOpen(false); setEditingVisitId(null); }}
               />
             </div>
-          );
-        }
-        return (
-          <div className="space-y-4">
-            <VisitsList 
-              visits={visits} 
-              integrados={integrados} 
-              onEditVisit={handleEditVisitClick} 
-              onDeleteVisit={handleDeleteVisit} 
-              onExport={handleExport}
-              onNewVisit={() => { setEditingVisitId(null); setIsVisitFormOpen(true); }}
-            />
-          </div>
-        )
-      }
-      case 'integrados':
-        return (
+          ) : (
+            <div className="space-y-4">
+              <VisitsList 
+                visits={visits} 
+                integrados={integrados} 
+                onEditVisit={handleEditVisitClick} 
+                onDeleteVisit={handleDeleteVisit} 
+                onExport={handleExport}
+                onNewVisit={() => { setEditingVisitId(null); setIsVisitFormOpen(true); }}
+              />
+            </div>
+          )
+        )}
+        
+        {currentTab === 'integrados' && (
           <Integrados 
             integrados={integrados} 
             visits={visits}
@@ -286,7 +293,6 @@ export default function App() {
               const updatedIntegrados = integrados.map(i => i.id === updated.id ? updated : i);
               setIntegrados(updatedIntegrados);
               await storage.saveIntegrados(updatedIntegrados);
-              // Save visits so that the new Integrado name/alojamento gets updated in all its records in Supabase
               const visitsToSync = visits.filter(v => v.integradoId === updated.id);
               await storage.saveVisits(visits, visitsToSync);
             }}
@@ -301,14 +307,12 @@ export default function App() {
               await storage.deleteIntegrado(id, visitsToDelete as string[]);
             }}
           />
-        );
-      case 'curva':
-        return <ReferenceCurve />;
-      case 'importar':
-        return <ImportData onImportComplete={() => { loadData(); setCurrentTab('dashboard'); }} />;
-      default:
-        return <Dashboard visits={visits} integrados={integrados} />;
-    }
+        )}
+        
+        {currentTab === 'curva' && <ReferenceCurve />}
+        {currentTab === 'importar' && <ImportData onImportComplete={() => { loadData(); setCurrentTab('dashboard'); }} />}
+      </>
+    );
   };
 
   const getPageTitle = () => {
@@ -365,6 +369,7 @@ export default function App() {
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-slate-500 hidden sm:inline-block">Data de Campo: {new Date().toLocaleDateString('pt-BR')}</span>
+            <Notifications visits={visits} integrados={integrados} />
             <button onClick={handleLogout} className="text-slate-500 hover:text-slate-700 flex items-center gap-1 text-sm font-medium transition-colors" title="Sair">
               <LogOut className="w-5 h-5" />
             </button>

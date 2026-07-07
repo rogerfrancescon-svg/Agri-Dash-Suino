@@ -19,12 +19,13 @@ export function preprocessImportData(rawData: string): PreProcessedData {
 
   // Detect delimiter based on the first few lines
   let delimiter = '\t';
-  if (lines[0].includes(';')) delimiter = ';';
+  if (lines[0].includes('\t')) delimiter = '\t';
+  else if (lines[0].includes(';')) delimiter = ';';
   else if (lines[0].includes(',')) delimiter = ',';
 
   // Parse all lines
   const parsedLines = lines.map(line => {
-    return line.trim().split(new RegExp(`\\${delimiter}(?=(?:(?:[^"]*"){2})*[^"]*$)`)).map(p => p.replace(/^"|"$/g, '').trim());
+    return line.trim().split(delimiter).map(p => p.replace(/^"|"$/g, '').trim());
   }).filter(parts => parts.length > 0 && parts.some(p => p !== ''));
 
   if (parsedLines.length === 0) return { integrados: [], visits, logs, errors };
@@ -78,13 +79,13 @@ export function preprocessImportData(rawData: string): PreProcessedData {
       else if (h.includes('alojamento') && !h.includes('meta') && !h.includes('consumo') && !h.includes('peso')) columnMap.alojamento = i;
       else if (h.includes('idade')) columnMap.idade = i;
       else if (h.includes('animais alojados')) columnMap.animaisAlojados = i;
-      else if (h.includes('recomendação') || h.includes('recomendacao')) columnMap.recomendacao = i;
-      else if ((h.includes('consumo') || h.includes('acumulado')) && !h.includes('meta') && !h.includes('real') && !h.includes('alojamento') && !h.includes('crescimento') && !h.includes('terminação') && !h.includes('terminacao')) columnMap.consumo = i;
+      else if (h.includes('recomenda')) columnMap.recomendacao = i;
+      else if ((h.includes('consumo') || h.includes('acumulado')) && !h.includes('meta') && !h.includes('real') && !h.includes('alojamento') && !h.includes('crescimento') && !h.includes('termina')) columnMap.consumo = i;
       else if (h.includes('mortalidade') || h.includes('mort')) columnMap.mortalidade = i;
       else if (h.includes('comedouro')) columnMap.comedouro = i;
-      else if (h.includes('colaborador') || h.includes('técnico') || h.includes('tecnico')) columnMap.colaborador = i;
+      else if (h.includes('colaborador') || h.includes('tecnico') || h.includes('téc') || h.includes('tcn')) columnMap.colaborador = i;
       else if (h.includes('peso aloj')) columnMap.pesoAloj = i;
-      else if (h.includes('pontuação') || h.includes('pontuacao') || h.includes('sanitária') || h.includes('sanitaria') || h.includes('score')) columnMap.pontuacaoSanitaria = i;
+      else if (h.includes('pontua') || h.includes('sanit') || h.includes('score')) columnMap.pontuacaoSanitaria = i;
       else if (h.includes('meta alojamento')) columnMap.metaAlojamento = i;
       else if (h.includes('consumo alojamento')) columnMap.consumoAlojamento = i;
       else if (h.includes('meta crescimento 1')) columnMap.metaCrescimento1 = i;
@@ -93,10 +94,10 @@ export function preprocessImportData(rawData: string): PreProcessedData {
       else if (h.includes('consumo crescimento 2')) columnMap.consumoCrescimento2 = i;
       else if (h.includes('meta crescimento 3')) columnMap.metaCrescimento3 = i;
       else if (h.includes('consumo crescimento 3')) columnMap.consumoCrescimento3 = i;
-      else if (h.includes('meta terminação 1') || h.includes('meta terminacao 1')) columnMap.metaTerminacao1 = i;
-      else if (h.includes('consumo terminação 1') || h.includes('consumo terminacao 1')) columnMap.consumoTerminacao1 = i;
-      else if (h.includes('meta terminação 2') || h.includes('meta terminacao 2')) columnMap.metaTerminacao2 = i;
-      else if (h.includes('consumo terminação 2') || h.includes('consumo terminacao 2')) columnMap.consumoTerminacao2 = i;
+      else if (h.includes('meta termina') && h.includes('1')) columnMap.metaTerminacao1 = i;
+      else if (h.includes('consumo termina') && h.includes('1')) columnMap.consumoTerminacao1 = i;
+      else if (h.includes('meta termina') && h.includes('2')) columnMap.metaTerminacao2 = i;
+      else if (h.includes('consumo termina') && h.includes('2')) columnMap.consumoTerminacao2 = i;
       else if (h.includes('consumo acumulado real')) columnMap.consumoAcumuladoReal = i;
       else if (h.includes('meta acumulada')) columnMap.metaAcumulada = i;
     }
@@ -156,11 +157,17 @@ export function preprocessImportData(rawData: string): PreProcessedData {
       if (!dStr) return '';
       if (dStr.includes('-')) {
         const p = dStr.split('-');
-        return p[0].length === 4 ? dStr : `${p[2]}-${p[1]}-${p[0]}`;
+        if (p.length !== 3) return dStr;
+        let year = p[2];
+        if (year.length === 2) year = '20' + year;
+        return p[0].length === 4 ? dStr : `${year}-${p[1]}-${p[0]}`;
       }
       if (dStr.includes('/')) {
         const p = dStr.split('/');
-        return p[0].length === 4 ? dStr.replace(/\//g, '-') : `${p[2]}-${p[1]}-${p[0]}`;
+        if (p.length !== 3) return dStr;
+        let year = p[2];
+        if (year.length === 2) year = '20' + year;
+        return p[0].length === 4 ? dStr.replace(/\//g, '-') : `${year}-${p[1]}-${p[0]}`;
       }
       return dStr;
     };

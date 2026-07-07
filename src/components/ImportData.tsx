@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { preprocessImportData } from '../utils/import-parser';
 import { storage } from '../lib/storage';
+import * as XLSX from 'xlsx';
 
 interface ImportDataProps {
   onImportComplete: () => void;
@@ -76,26 +77,51 @@ export function ImportData({ onImportComplete }: ImportDataProps) {
     }
   };
 
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const content = event.target?.result;
-      if (typeof content === 'string') {
-        setRawData(content);
-        addLog(`Arquivo '${file.name}' carregado. Verifique os dados abaixo e inicie a importação.`);
-      }
-    };
-    reader.readAsText(file);
+    if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const data = new Uint8Array(event.target?.result as ArrayBuffer);
+          const workbook = XLSX.read(data, { type: 'array', raw: true });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          
+          // Convert to standard tab-separated string
+          const csvData = XLSX.utils.sheet_to_csv(worksheet, { FS: '\t' });
+          
+          setRawData(csvData);
+          addLog(`Arquivo '${file.name}' carregado. Verifique os dados abaixo e inicie a importação.`);
+        } catch (err: any) {
+          addLog(`Erro ao ler o arquivo Excel: ${err.message}`);
+        }
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      };
+      reader.readAsArrayBuffer(file);
+    } else {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const content = event.target?.result;
+        if (typeof content === 'string') {
+          setRawData(content);
+          addLog(`Arquivo '${file.name}' carregado como texto. Verifique os dados abaixo e inicie a importação.`);
+        }
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      };
+      reader.readAsText(file);
+    }
   };
 
   return (
     <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
       <h2 className="text-lg font-bold text-slate-800 mb-4">Importar Dados</h2>
       <p className="text-sm text-slate-600 mb-4">
-        Anexe o arquivo (.txt, .csv, .tsv) ou cole abaixo os dados extraídos do Excel. 
+        Anexe o arquivo (.txt, .csv, .tsv, .xlsx) ou cole abaixo os dados extraídos do Excel. 
         O sistema espera as colunas na seguinte ordem: <strong>Data, Integrado, Alojamento, Idade, Recomendação, Consumo acumulado, Mortalidade, Comedouro, Colaborador, Consumos de Ração/meta, Peso aloj, Pontuação Sanitária</strong>.
         As datas devem estar no formato DD/MM/AAAA.
       </p>
@@ -103,8 +129,9 @@ export function ImportData({ onImportComplete }: ImportDataProps) {
       <div className="mb-4">
         <label className="block mb-2 text-sm font-medium text-slate-700">Selecione o arquivo de dados:</label>
         <input 
+          ref={fileInputRef}
           type="file" 
-          accept=".txt,.csv,.tsv" 
+          accept=".txt,.csv,.tsv,.xlsx,.xls" 
           onChange={handleFileUpload}
           className="block w-full text-sm text-slate-500
             file:mr-4 file:py-2 file:px-4
