@@ -1,2 +1,0 @@
-Data,Integrado
-01/01/2023,Teste
