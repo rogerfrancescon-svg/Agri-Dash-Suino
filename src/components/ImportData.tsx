@@ -125,6 +125,9 @@ export function ImportData({ onImportComplete }: ImportDataProps) {
       
     } catch (e: any) {
       addLog(`Erro durante a importação: ${e.message}`);
+      if (e.message.includes("cache do esquema") || e.message.includes("coluna") || e.message.includes("column")) {
+        addLog("DICA: Vá ao SQL Editor do Supabase e execute: ALTER TABLE registros ADD COLUMN IF NOT EXISTS \"Tipo Lote\" text DEFAULT 'Misto'; ALTER TABLE registros ADD COLUMN IF NOT EXISTS \"Peso aloj\" numeric; ALTER TABLE registros ADD COLUMN IF NOT EXISTS \"Pontuação Sanitária\" numeric; NOTIFY pgrst, 'reload schema';");
+      }
       setErrors([e.message]);
       saveToErrorHistory([e.message]);
     } finally {
@@ -267,7 +270,7 @@ export function ImportData({ onImportComplete }: ImportDataProps) {
                     onImportComplete();
                   }, 1000);
                 } catch (e: any) {
-                  alert(`Erro ao apagar os dados:\n\n${e.message}\n\nSe for um erro de RLS (Row-Level Security), vá ao painel do Supabase, acesse o SQL Editor e execute:\nALTER TABLE registros DISABLE ROW LEVEL SECURITY;`);
+                  alert(`Erro ao apagar os dados:\n\n${e.message}\n\nSe for um erro de RLS, acesse o SQL Editor do Supabase e execute:\nALTER TABLE registros DISABLE ROW LEVEL SECURITY;`);
                 }
               }}
               disabled={loading}

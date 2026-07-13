@@ -66,6 +66,8 @@ export default function App() {
           setDbError(null); // Ignore in offline mode
         } else if (error?.message?.includes('relation "public.profiles" does not exist')) {
           setDbError(`Erro no Supabase: A tabela 'registros' possui uma regra (Policy/RLS) que tenta acessar a tabela 'profiles', que foi deletada. Desative o RLS ou remova a regra no painel do Supabase.`);
+        } else if (error?.message?.includes('coluna') || error?.message?.includes('column')) {
+          setDbError(`Erro no Supabase (coluna não encontrada ou cache).\n\nVá ao SQL Editor do Supabase e execute:\nALTER TABLE registros ADD COLUMN IF NOT EXISTS "Tipo Lote" text DEFAULT 'Misto';\nALTER TABLE registros ADD COLUMN IF NOT EXISTS "Peso aloj" numeric;\nALTER TABLE registros ADD COLUMN IF NOT EXISTS "Pontuação Sanitária" numeric;\nNOTIFY pgrst, 'reload schema';`);
         } else {
           setDbError(`Erro ao conectar com a tabela 'registros': ${error.message}`);
         }
@@ -194,7 +196,7 @@ export default function App() {
       // Create local backup to IndexedDB
       await saveBackupToIndexedDB();
     } catch (error: any) {
-      alert(`Erro ao salvar lançamento:\n\n${error.message}\n\nSe for um erro de RLS (Row-Level Security), vá ao painel do Supabase, acesse o SQL Editor e execute:\nALTER TABLE registros DISABLE ROW LEVEL SECURITY;`);
+      alert(`Erro ao salvar lançamento:\n\n${error.message}\n\nPara corrigir este erro (incluindo erro de cache), vá ao painel do Supabase, acesse o SQL Editor e execute tudo isto:\n\nALTER TABLE registros ADD COLUMN IF NOT EXISTS "Tipo Lote" text DEFAULT 'Misto';\nALTER TABLE registros ADD COLUMN IF NOT EXISTS "Peso aloj" numeric;\nALTER TABLE registros ADD COLUMN IF NOT EXISTS "Pontuação Sanitária" numeric;\nNOTIFY pgrst, 'reload schema';`);
       // Revert the optimistic update if needed, but for now we just show the error.
     }
   };
@@ -212,7 +214,7 @@ export default function App() {
       // Create local backup to IndexedDB
       await saveBackupToIndexedDB();
     } catch (error: any) {
-      alert(`Erro ao atualizar lançamento:\n\n${error.message}\n\nSe for um erro de RLS (Row-Level Security), vá ao painel do Supabase, acesse o SQL Editor e execute:\nALTER TABLE registros DISABLE ROW LEVEL SECURITY;`);
+      alert(`Erro ao atualizar lançamento:\n\n${error.message}\n\nPara corrigir este erro (incluindo erro de cache), vá ao painel do Supabase, acesse o SQL Editor e execute tudo isto:\n\nALTER TABLE registros ADD COLUMN IF NOT EXISTS "Tipo Lote" text DEFAULT 'Misto';\nALTER TABLE registros ADD COLUMN IF NOT EXISTS "Peso aloj" numeric;\nALTER TABLE registros ADD COLUMN IF NOT EXISTS "Pontuação Sanitária" numeric;\nNOTIFY pgrst, 'reload schema';`);
     }
   };
 
@@ -222,7 +224,7 @@ export default function App() {
       setVisits(updatedVisits);
       await storage.deleteVisit(id);
     } catch (error: any) {
-      alert(`Erro ao deletar lançamento:\n\n${error.message}\n\nSe for um erro de RLS (Row-Level Security), vá ao painel do Supabase, acesse o SQL Editor e execute:\nALTER TABLE registros DISABLE ROW LEVEL SECURITY;`);
+      alert(`Erro ao deletar lançamento:\n\n${error.message}\n\nSe for um erro de RLS, acesse o SQL Editor do Supabase e execute:\nALTER TABLE registros DISABLE ROW LEVEL SECURITY;`);
     }
   };
 
@@ -403,7 +405,7 @@ export default function App() {
                 
                 await storage.deleteIntegrado(id, visitsToDelete as string[]);
               } catch (error: any) {
-                alert(`Erro ao deletar integrado:\n\n${error.message}\n\nSe for um erro de RLS (Row-Level Security), vá ao painel do Supabase, acesse o SQL Editor e execute:\nALTER TABLE registros DISABLE ROW LEVEL SECURITY;`);
+                alert(`Erro ao deletar integrado:\n\n${error.message}\n\nSe for um erro de RLS, acesse o SQL Editor do Supabase e execute:\nALTER TABLE registros DISABLE ROW LEVEL SECURITY;`);
               }
             }}
           />

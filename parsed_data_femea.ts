@@ -1,3 +1,4 @@
+import { GrowthCurvePoint } from "./src/types";
 export const growthCurveFemea: GrowthCurvePoint[] = [
   { dia: 1, pesoInicial: 22.000, pesoFinal: 22.680, cmd: 1.029, consumoAcumulado: 1.029, gpd: 0.681 },
   { dia: 2, pesoInicial: 22.680, pesoFinal: 23.370, cmd: 1.051, consumoAcumulado: 2.079, gpd: 0.692 },
