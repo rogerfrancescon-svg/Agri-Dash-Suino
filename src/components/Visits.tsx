@@ -9,12 +9,13 @@ interface VisitsListProps {
   onEditVisit: (id: string) => void;
   onDeleteVisit: (id: string) => void;
   onNewVisit?: () => void;
+  onNewLote?: () => void;
   onExport?: (data?: Visit[]) => void;
 }
 
 type SortOption = 'date-desc' | 'date-asc' | 'name-asc' | 'name-desc' | 'idade-desc' | 'idade-asc';
 
-export function VisitsList({ visits, integrados, onEditVisit, onDeleteVisit, onNewVisit, onExport }: VisitsListProps) {
+export function VisitsList({ visits, integrados, onEditVisit, onDeleteVisit, onNewVisit, onNewLote, onExport }: VisitsListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('date-desc');
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -84,6 +85,12 @@ export function VisitsList({ visits, integrados, onEditVisit, onDeleteVisit, onN
               >
                 <Download className="w-4 h-4" />
                 <span className="hidden lg:inline">Exportar</span>
+              </button>
+            )}
+            {onNewLote && (
+              <button onClick={onNewLote} className="flex-1 sm:flex-none flex items-center justify-center gap-1 bg-emerald-600 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-emerald-700 transition-colors">
+                <Plus className="w-4 h-4" />
+                <span>Novo Lote</span>
               </button>
             )}
             {onNewVisit && (

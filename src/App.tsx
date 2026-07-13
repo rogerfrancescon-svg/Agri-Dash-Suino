@@ -22,6 +22,7 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [editingVisitId, setEditingVisitId] = useState<string | null>(null);
   const [isVisitFormOpen, setIsVisitFormOpen] = useState(false);
+  const [isNewLoteMode, setIsNewLoteMode] = useState(false);
   
   const [integrados, setIntegrados] = useState<Integrado[]>([]);
   const [visits, setVisits] = useState<Visit[]>([]);
@@ -359,8 +360,9 @@ export default function App() {
                 integrados={integrados} 
                 visits={visits}
                 initialData={editingVisitId ? visits.find(v => v.id === editingVisitId) : undefined}
+                isNewLote={isNewLoteMode}
                 onSave={editingVisitId ? handleUpdateVisit : handleAddVisit} 
-                onCancel={() => { setIsVisitFormOpen(false); setEditingVisitId(null); }}
+                onCancel={() => { setIsVisitFormOpen(false); setEditingVisitId(null); setIsNewLoteMode(false); }}
               />
             </div>
           ) : (
@@ -371,7 +373,8 @@ export default function App() {
                 onEditVisit={handleEditVisitClick} 
                 onDeleteVisit={handleDeleteVisit} 
                 onExport={handleExport}
-                onNewVisit={() => { setEditingVisitId(null); setIsVisitFormOpen(true); }}
+                onNewVisit={() => { setEditingVisitId(null); setIsNewLoteMode(false); setIsVisitFormOpen(true); }}
+                onNewLote={() => { setEditingVisitId(null); setIsNewLoteMode(true); setIsVisitFormOpen(true); }}
               />
             </div>
           )
@@ -415,7 +418,7 @@ export default function App() {
   const getPageTitle = () => {
     switch(currentTab) {
       case 'dashboard': return 'Dashboard de Desempenho';
-      case 'visitas': return isVisitFormOpen ? (editingVisitId ? 'Editar Lançamento' : 'Novo Lançamento') : 'Visitas';
+      case 'visitas': return isVisitFormOpen ? (editingVisitId ? 'Editar Lançamento' : (isNewLoteMode ? 'Novo Lote' : 'Novo Lançamento')) : 'Visitas';
       case 'integrados': return 'Histórico de Integrados';
       case 'curva': return 'Curva de Referência';
       case 'importar': return 'Importar Base de Dados';

@@ -8,11 +8,12 @@ interface VisitaFormProps {
   integrados: Integrado[];
   visits?: Visit[];
   initialData?: Visit;
+  isNewLote?: boolean;
   onSave: (visit: Visit, integradoNome?: string, alojamentoDate?: string) => void;
   onCancel?: () => void;
 }
 
-export function VisitaForm({ integrados, visits = [], initialData, onSave, onCancel }: VisitaFormProps) {
+export function VisitaForm({ integrados, visits = [], initialData, isNewLote, onSave, onCancel }: VisitaFormProps) {
   const [formData, setFormData] = useState<Partial<Visit> & { alojamentoDate?: string, integradoNome?: string }>(() => {
     if (initialData) {
       const integrado = integrados.find(i => i.id === initialData.integradoId);
@@ -84,18 +85,20 @@ export function VisitaForm({ integrados, visits = [], initialData, onSave, onCan
     if (name === 'integradoNome') {
       const integrado = integrados.find(i => i.name.toLowerCase() === value.toLowerCase());
       if (integrado) {
-        updates.alojamentoDate = integrado.alojamentoDate;
-        
-        // Find previous visits for this integrado to auto-fill animaisAlojados and animaisMortos
-        const integradoVisits = visits.filter(v => v.integradoId === integrado.id).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        if (integradoVisits.length > 0) {
-          const lastVisit = integradoVisits[0];
-          if (lastVisit.animaisAlojados) updates.animaisAlojados = lastVisit.animaisAlojados;
-          if (lastVisit.animaisMortos) updates.animaisMortos = lastVisit.animaisMortos;
-          if (lastVisit.mortalidade) updates.mortalidade = lastVisit.mortalidade;
-          ['pesoAloj', 'pontuacaoSanitaria', 'cargaAlojamento', 'consumoAlojamento', 'cargaCrescimento1', 'consumoCrescimento1', 'cargaCrescimento2', 'consumoCrescimento2', 'cargaCrescimento3', 'consumoCrescimento3', 'cargaTerminacao1', 'consumoTerminacao1', 'cargaTerminacao2', 'consumoTerminacao2', 'volumeTotalCargas', 'consumoAcumuladoReal'].forEach(key => {
-            if (lastVisit[key as keyof typeof lastVisit] !== undefined && lastVisit[key as keyof typeof lastVisit] !== null) updates[key] = lastVisit[key as keyof typeof lastVisit];
-          });
+        if (!isNewLote) {
+          updates.alojamentoDate = integrado.alojamentoDate;
+          
+          // Find previous visits for this integrado to auto-fill animaisAlojados and animaisMortos
+          const integradoVisits = visits.filter(v => v.integradoId === integrado.id).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          if (integradoVisits.length > 0) {
+            const lastVisit = integradoVisits[0];
+            if (lastVisit.animaisAlojados) updates.animaisAlojados = lastVisit.animaisAlojados;
+            if (lastVisit.animaisMortos) updates.animaisMortos = lastVisit.animaisMortos;
+            if (lastVisit.mortalidade) updates.mortalidade = lastVisit.mortalidade;
+            ['pesoAloj', 'pontuacaoSanitaria', 'cargaAlojamento', 'consumoAlojamento', 'cargaCrescimento1', 'consumoCrescimento1', 'cargaCrescimento2', 'consumoCrescimento2', 'cargaCrescimento3', 'consumoCrescimento3', 'cargaTerminacao1', 'consumoTerminacao1', 'cargaTerminacao2', 'consumoTerminacao2', 'volumeTotalCargas', 'consumoAcumuladoReal'].forEach(key => {
+              if (lastVisit[key as keyof typeof lastVisit] !== undefined && lastVisit[key as keyof typeof lastVisit] !== null) updates[key] = lastVisit[key as keyof typeof lastVisit];
+            });
+          }
         }
       }
     }
