@@ -82,26 +82,59 @@ export function VisitaForm({ integrados, visits = [], initialData, isNewLote, on
       };
     }
 
-    if (name === 'integradoNome') {
-      const integrado = integrados.find(i => i.name.toLowerCase() === value.toLowerCase());
-      if (integrado) {
-        if (!isNewLote) {
-          updates.alojamentoDate = integrado.alojamentoDate;
+    if (name === 'integradoNome' || name === 'alojamentoDate') {
+      const nomeToSearch = name === 'integradoNome' ? value : formData.integradoNome;
+      const dateToSearch = name === 'alojamentoDate' ? value : undefined;
+      
+      if (nomeToSearch) {
+        const matchingIntegrados = integrados.filter(i => i.name.toLowerCase() === nomeToSearch.toLowerCase());
+        let integrado = undefined;
+        
+        if (matchingIntegrados.length > 0) {
+          if (dateToSearch) {
+             integrado = matchingIntegrados.find(i => i.alojamentoDate === dateToSearch);
+          }
           
-          // Find previous visits for this integrado to auto-fill animaisAlojados and animaisMortos
-          const integradoVisits = visits.filter(v => v.integradoId === integrado.id).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-          if (integradoVisits.length > 0) {
-            const lastVisit = integradoVisits[0];
-            if (lastVisit.animaisAlojados) updates.animaisAlojados = lastVisit.animaisAlojados;
-            if (lastVisit.animaisMortos) updates.animaisMortos = lastVisit.animaisMortos;
-            if (lastVisit.mortalidade) updates.mortalidade = lastVisit.mortalidade;
-            ['pesoAloj', 'pontuacaoSanitaria', 'cargaAlojamento', 'consumoAlojamento', 'cargaCrescimento1', 'consumoCrescimento1', 'cargaCrescimento2', 'consumoCrescimento2', 'cargaCrescimento3', 'consumoCrescimento3', 'cargaTerminacao1', 'consumoTerminacao1', 'cargaTerminacao2', 'consumoTerminacao2', 'volumeTotalCargas', 'consumoAcumuladoReal'].forEach(key => {
-              if (lastVisit[key as keyof typeof lastVisit] !== undefined && lastVisit[key as keyof typeof lastVisit] !== null) updates[key] = lastVisit[key as keyof typeof lastVisit];
-            });
+          if (!integrado) {
+            const emAndamento = matchingIntegrados.filter(i => i.status === 'Em andamento');
+            if (emAndamento.length > 0) {
+               emAndamento.sort((a, b) => new Date(b.alojamentoDate).getTime() - new Date(a.alojamentoDate).getTime());
+               integrado = emAndamento[0];
+            } else {
+               matchingIntegrados.sort((a, b) => new Date(b.alojamentoDate).getTime() - new Date(a.alojamentoDate).getTime());
+               integrado = matchingIntegrados[0];
+            }
+          }
+        }
+
+        if (integrado) {
+          if (!isNewLote) {
+            if (name === 'integradoNome') {
+              updates.alojamentoDate = integrado.alojamentoDate;
+            }
+            
+            // Find previous visits for this integrado to auto-fill animaisAlojados and animaisMortos
+            const integradoVisits = visits.filter(v => v.integradoId === integrado.id).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            if (integradoVisits.length > 0) {
+              const lastVisit = integradoVisits[0];
+              if (lastVisit.animaisAlojados) updates.animaisAlojados = lastVisit.animaisAlojados;
+              if (lastVisit.animaisMortos) updates.animaisMortos = lastVisit.animaisMortos;
+              if (lastVisit.mortalidade) updates.mortalidade = lastVisit.mortalidade;
+              ['pesoAloj', 'pontuacaoSanitaria', 'cargaAlojamento', 'consumoAlojamento', 'cargaCrescimento1', 'consumoCrescimento1', 'cargaCrescimento2', 'consumoCrescimento2', 'cargaCrescimento3', 'consumoCrescimento3', 'cargaTerminacao1', 'consumoTerminacao1', 'cargaTerminacao2', 'consumoTerminacao2', 'volumeTotalCargas', 'consumoAcumuladoReal'].forEach(key => {
+                if (lastVisit[key as keyof typeof lastVisit] !== undefined && lastVisit[key as keyof typeof lastVisit] !== null) updates[key] = lastVisit[key as keyof typeof lastVisit];
+              });
+            } else {
+              // If we changed to a different lote that has NO visits yet, we should probably clear the auto-filled fields
+              ['animaisAlojados', 'animaisMortos', 'mortalidade', 'pesoAloj', 'pontuacaoSanitaria', 'cargaAlojamento', 'consumoAlojamento', 'cargaCrescimento1', 'consumoCrescimento1', 'cargaCrescimento2', 'consumoCrescimento2', 'cargaCrescimento3', 'consumoCrescimento3', 'cargaTerminacao1', 'consumoTerminacao1', 'cargaTerminacao2', 'consumoTerminacao2', 'volumeTotalCargas', 'consumoAcumuladoReal'].forEach(key => {
+                updates[key] = '';
+              });
+            }
           }
         }
       }
     }
+
+
     
     setFormData(prev => {
       const newData = { ...prev, ...updates };
@@ -203,14 +236,34 @@ export function VisitaForm({ integrados, visits = [], initialData, isNewLote, on
 
           <div className="space-y-2">
             <label className="block text-xs font-semibold text-slate-500 mb-1">Data de Alojamento</label>
-            <input 
-              type="date" 
-              name="alojamentoDate"
-              required
-              value={formData.alojamentoDate || ''}
-              onChange={handleChange}
-              className="w-full border border-slate-200 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-            />
+            {(!isNewLote && formData.integradoNome && integrados.filter(i => i.name.toLowerCase() === formData.integradoNome?.toLowerCase()).length > 1) ? (
+              <select
+                name="alojamentoDate"
+                required
+                value={formData.alojamentoDate || ''}
+                onChange={handleChange}
+                className="w-full border border-slate-200 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+              >
+                {integrados
+                  .filter(i => i.name.toLowerCase() === formData.integradoNome?.toLowerCase())
+                  .sort((a, b) => new Date(b.alojamentoDate).getTime() - new Date(a.alojamentoDate).getTime())
+                  .map(i => (
+                    <option key={i.id} value={i.alojamentoDate}>
+                      {i.alojamentoDate.split('-').reverse().join('/')} {i.status === 'Fechado' ? '(Fechado)' : ''}
+                    </option>
+                  ))
+                }
+              </select>
+            ) : (
+              <input 
+                type="date" 
+                name="alojamentoDate"
+                required
+                value={formData.alojamentoDate || ''}
+                onChange={handleChange}
+                className="w-full border border-slate-200 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+            )}
           </div>
         </div>
 

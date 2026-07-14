@@ -364,7 +364,7 @@ export function Dashboard({ visits, integrados, onNavigateToVisit }: DashboardPr
                       <div className={`w-4 h-4 border rounded mr-2 flex items-center justify-center shrink-0 ${isSelected ? 'bg-blue-500 border-blue-500' : 'border-slate-300'}`}>
                         {isSelected && <Check className="w-3 h-3 text-white" />}
                       </div>
-                      <span className="text-sm text-slate-700 truncate">{i.name}</span>
+                      <span className="text-sm text-slate-700 truncate">{i.name} {i.alojamentoDate ? `(${i.alojamentoDate.split('-').reverse().join('/')})` : ''}</span>
                     </div>
                   );
                 })}
